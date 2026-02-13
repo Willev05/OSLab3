@@ -56,9 +56,27 @@ void *check_column(void *arg) {
 void *check_grid(void *arg) {
     parameters *p = (parameters *)arg;
 
-    // TODO
+    int nums[9] = {0};
 
-    return NULL;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            int value = sudoku[p->row + i][p->column + j];
+
+            if (value < 1 || value > 9) {
+                return (void *)0;
+            }
+
+            nums[value - 1]++;
+        }
+    }
+
+    for (int i = 0; i < 9; i++) {
+        if (nums[i] != 1) {
+            return (void *)0;
+        }
+    }
+
+    return (void *)1;
 }
 
 int main(void) {
