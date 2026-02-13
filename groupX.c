@@ -23,9 +23,19 @@ typedef struct {
 /* thread entry functions */
 void *check_row(void *arg) {
     parameters *p = (parameters *)arg;
-
-    // TODO
-
+    //This thread will cover all rows, therefore, it will assume to be starting at [0][0]. Only results will be used on the struct.
+    int numbers[9] = {0};
+    for (int row = 0; row < 9; row++){
+        for (int column = 0; column < 9; column++){
+            int num = sudoku[row][column];
+            if (numbers[num - 1]){
+                *(p->results) = 0;
+                return NULL;
+            } 
+            numbers[num - 1] = 1;
+        }
+        memset(numbers, 0, sizeof(numbers));
+    }
     return NULL;
 }
 
@@ -63,11 +73,41 @@ int main(void) {
 
     // TODO: read sudoku[9][9] from stdin
 
-    int results[27] = {0};
-    pthread_t threads[27];
+    int *results;
+    pthread_t threads[11];
 
     // TODO: create threads, cleanup resource, print results
 
+    //Malloc all of our results
+    results = calloc(11, sizeof(int));
+
+    //Create thread for the rows
+    parameters *param = malloc(sizeof(parameters));
+    param->results = results + 10;
+    pthread_create(&threads[10], NULL, check_row, param);
+
+    //Create thread for the columns
+    parameters *param = malloc(sizeof(parameters));
+    param->results = results + 11;
+    pthread_create(&threads[11], NULL, check_column, param);
+
+    //Create threads for the subgrids
+    for (int i = 0; i < 9; i++){
+        parameters *param = malloc(sizeof(parameters));
+        param->results = results + i;
+        param->row = i / 3;
+        param->column = i % 3;
+        pthread_create(&threads[i], NULL, check_grid, param);
+    }
+
+    //Wait for all threads to complete and check their return value
+    int validity = 1;
+    for (int i = 0; i < 11; i++) {
+        pthread_join(threads[i], NULL);
+        validity = (!validity || !results[i]) ? 0 : 1;
+    }
+
+    printf("%d\n");
 
     return 0;
 }
